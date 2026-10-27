@@ -48,8 +48,6 @@ Sistema de gestión integral para optimizar la atención de mascotas y la progra
 
 Antes de iniciar el backend, es necesario crear un archivo `.env` con las variables de entorno del proyecto (conexión a MySQL, clave secreta de JWT, etc.).
 
-> ⚠️ El archivo `.env` contiene datos sensibles: agregalo al `.gitignore` y no lo subas al repositorio.
-
 ---
 
 ## 📖 Documentación de la API
