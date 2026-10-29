@@ -43,7 +43,10 @@ class Mascota(Base):
     castrado = Column(Boolean, nullable=False, default=False, server_default="0")
     observaciones = Column(TEXT, nullable=True)
     activo = Column(Boolean, nullable=False, default=True, server_default="1")
-    creado_en = Column(DateTime, nullable=False, server_default=func.current_timestamp())
+    creado_en = Column(
+        DateTime, 
+        nullable=False,
+        server_default=func.current_timestamp())
     actualizado_en = Column(
         DateTime,
         nullable=False,
