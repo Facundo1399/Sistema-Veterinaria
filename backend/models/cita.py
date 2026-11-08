@@ -7,7 +7,6 @@ from sqlalchemy import (
     Enum,
     ForeignKey,
     Integer,
-    SmallInteger,
     func,
 )
 
@@ -45,7 +44,7 @@ class Cita(Base):
         server_default="consulta",
     )
     fecha_hora = Column(DateTime, nullable=False)
-    duracion_min = Column(SmallInteger, nullable=False, default=30, server_default="30")
+    duracion_min = Column(Integer, nullable=False, default=30, server_default="30")
     motivo = Column(TEXT, nullable=True)
     estado = Column(
         Enum(

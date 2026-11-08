@@ -12,10 +12,16 @@ from schemas.propietario import (
     PropietarioResponse,
     PropietarioUpdate,
 )
+from security.dependencies import require_roles
+from security.permissions import SOLO_ADMIN, TODOS_LOS_ROLES
 
 logger = logging.getLogger(__name__)
 
-router = APIRouter(prefix="/propietarios", tags=["Propietarios"])
+router = APIRouter(
+    prefix="/propietarios",
+    tags=["Propietarios"],
+    dependencies=[Depends(require_roles(*TODOS_LOS_ROLES))],
+)
 
 CAMPOS_OBLIGATORIOS = {"nombre", "activo"}
 
@@ -127,6 +133,7 @@ def actualizar(
 @router.delete(
     "/{propietario_id}",
     status_code=status.HTTP_204_NO_CONTENT,
+    dependencies=[Depends(require_roles(*SOLO_ADMIN))],
 )
 def desactivar(propietario_id: int, db: Session = Depends(get_db)):
     propietario = obtener_activo_o_404(db, propietario_id)

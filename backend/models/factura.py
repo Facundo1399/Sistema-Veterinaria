@@ -12,6 +12,7 @@ from sqlalchemy import (
     TEXT,
     func,
 )
+from sqlalchemy.orm import relationship
 
 from database import Base
 
@@ -61,6 +62,11 @@ class Factura(Base):
         server_default=func.current_timestamp(),
         onupdate=func.current_timestamp(),
     )
+    detalles = relationship(
+        "DetalleFactura",
+        back_populates="factura",
+        cascade="all, delete-orphan",
+    )
 
 
 class DetalleFactura(Base):
@@ -73,3 +79,4 @@ class DetalleFactura(Base):
     cantidad = Column(DECIMAL(8, 2), nullable=False, default=1, server_default="1")
     precio_unitario = Column(DECIMAL(10, 2), nullable=False)
     subtotal = Column(DECIMAL(12, 2), nullable=False)
+    factura = relationship("Factura", back_populates="detalles")

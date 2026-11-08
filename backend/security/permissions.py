@@ -4,6 +4,7 @@ from models.usuario import RolUsuario
 TODOS_LOS_ROLES = (RolUsuario.ADMIN, RolUsuario.VETERINARIO, RolUsuario.RECEPCION)
 CLINICOS = (RolUsuario.ADMIN, RolUsuario.VETERINARIO)
 SOLO_ADMIN = (RolUsuario.ADMIN,)
+FACTURACION = (RolUsuario.ADMIN, RolUsuario.RECEPCION)
 
 TIPOS_CITA_PERMITIDOS = {
     RolUsuario.ADMIN: set(TipoCita),
