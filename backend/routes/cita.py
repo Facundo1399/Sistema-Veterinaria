@@ -241,7 +241,7 @@ def listar(
     )
 
 
-@router.get("/{cita_id}", response_model=CitaResponse)
+@router.get("/{cita_id}/", response_model=CitaResponse)
 def obtener(cita_id: int, db: Session = Depends(get_db)):
     return obtener_o_404(db, cita_id)
 
@@ -406,7 +406,7 @@ def actualizar(
 
 
 @router.delete(
-    "/{cita_id}",
+    "/{cita_id}/",
     status_code=status.HTTP_204_NO_CONTENT,
 )
 def cancelar(

@@ -9,8 +9,10 @@ from routes.cita import router as cita_router
 from routes.especie import router as especie_router
 from routes.consulta import router as consulta_router
 from routes.historial_medico import router as historial_router
+from routes.veterinario import router as veterinario_router
 from routes.factura import router as factura_router
 from routes.producto import router as producto_router
+from routes.veterinario import router as veterinario_router
 
 app = FastAPI(title="VetControl")
 
@@ -30,5 +32,7 @@ app.include_router(cita_router)
 app.include_router(especie_router)
 app.include_router(consulta_router)
 app.include_router(historial_router)
+app.include_router(veterinario_router)
 app.include_router(producto_router)
 app.include_router(factura_router)
+app.include_router(veterinario_router)
