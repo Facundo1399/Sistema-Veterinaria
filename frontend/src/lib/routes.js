@@ -1,0 +1,15 @@
+export const SIDEBAR_ROUTE_PATHS = {
+  dashboard: '/dashboard',
+  mascotas: '/mascotas',
+  propietarios: '/propietarios',
+  veterinarios: '/veterinarios',
+  citas: '/citas',
+  consultas: '/consultas',
+  historial: '/historial',
+  vacunaciones: '/vacunaciones',
+  cirugias: '/cirugias',
+  productos: '/productos',
+  facturacion: '/facturacion',
+  usuarios: '/usuarios',
+  'nuevo-usuario': '/usuarios/nuevo',
+}

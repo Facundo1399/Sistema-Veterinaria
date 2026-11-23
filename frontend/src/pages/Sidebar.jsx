@@ -121,9 +121,9 @@ export default function Sidebar({
     },
   ]
 
-  const opcionesPrincipales = esVeterinario
-    ? menuPrincipal.filter((item) => item.route === 'citas')
-    : menuPrincipal.filter((item) => item.roles.includes(rol))
+  const opcionesPrincipales = menuPrincipal.filter(
+    (item) => item.roles.includes(rol)
+  )
 
   // Estilos de cada enlace
   const navItemClass = (route) =>

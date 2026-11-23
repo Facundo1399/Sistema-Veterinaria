@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { UserPlus, Save, X } from 'lucide-react'
+import { apiRequest } from '../lib/api.js'
 
 export default function PropietariosForm({ onCancel, onSuccess }) {
   const [formData, setFormData] = useState({
@@ -8,6 +9,9 @@ export default function PropietariosForm({ onCancel, onSuccess }) {
     telefono: '',
     email: '',
   })
+  const [formError, setFormError] = useState('')
+  const [successMessage, setSuccessMessage] = useState('')
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
   const handleChange = (e) => {
     const { name, value } = e.target
@@ -15,30 +19,47 @@ export default function PropietariosForm({ onCancel, onSuccess }) {
       ...prev,
       [name]: value,
     }))
+    setFormError('')
+    setSuccessMessage('')
   }
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
 
-    if (
-      !formData.nombre.trim() ||
-      !formData.apellido.trim() ||
-      !formData.telefono.trim()
-    ) {
+    if (!formData.nombre.trim() || !formData.email.trim()) {
+      setFormError('Complete nombre y correo electrónico.')
       return
     }
 
-    // Preparamos el payload limpio para FastAPI / Pydantic
     const payload = {
       nombre: formData.nombre.trim(),
-      apellido: formData.apellido.trim(),
-      telefono: formData.telefono.trim(),
-      email: formData.email.trim() || null,
+      apellido: formData.apellido.trim() || null,
+      telefono: formData.telefono.trim() || null,
+      email: formData.email.trim(),
+      activo: true,
     }
 
-    console.log('Enviando nuevo propietario:', payload)
-    // Aquí iría tu petición POST a /api/propietarios
-    onSuccess?.(payload)
+    setIsSubmitting(true)
+    setFormError('')
+    setSuccessMessage('')
+    try {
+      const propietario = await apiRequest('/propietarios/', {
+        method: 'POST',
+        body: JSON.stringify(payload),
+      })
+      setSuccessMessage('Propietario registrado correctamente.')
+      setFormData({
+        nombre: '',
+        apellido: '',
+        telefono: '',
+        email: '',
+      })
+      onSuccess?.(propietario)
+    } catch (error) {
+      setFormError(error.message)
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   const inputClass =
@@ -68,6 +89,22 @@ export default function PropietariosForm({ onCancel, onSuccess }) {
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-8">
+          {formError && (
+            <p
+              role="alert"
+              className="rounded-lg border border-red-500/30 bg-red-500/10 px-3.5 py-2 text-sm text-red-300"
+            >
+              {formError}
+            </p>
+          )}
+          {successMessage && (
+            <p
+              role="status"
+              className="rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-3.5 py-2 text-sm text-emerald-300"
+            >
+              {successMessage}
+            </p>
+          )}
           
           {/* SECCIÓN: DATOS PERSONALES Y CONTACTO */}
           <div>
@@ -86,6 +123,7 @@ export default function PropietariosForm({ onCancel, onSuccess }) {
                   name="nombre"
                   type="text"
                   required
+                  maxLength={100}
                   value={formData.nombre}
                   onChange={handleChange}
                   placeholder="Ej. Carlos"
@@ -96,13 +134,13 @@ export default function PropietariosForm({ onCancel, onSuccess }) {
               {/* Apellido */}
               <div>
                 <label htmlFor="apellido" className={labelClass}>
-                  Apellido *
+                  Apellido
                 </label>
                 <input
                   id="apellido"
                   name="apellido"
                   type="text"
-                  required
+                  maxLength={100}
                   value={formData.apellido}
                   onChange={handleChange}
                   placeholder="Ej. Gómez"
@@ -113,13 +151,13 @@ export default function PropietariosForm({ onCancel, onSuccess }) {
               {/* Teléfono */}
               <div>
                 <label htmlFor="telefono" className={labelClass}>
-                  Teléfono *
+                  Teléfono
                 </label>
                 <input
                   id="telefono"
                   name="telefono"
                   type="tel"
-                  required
+                  maxLength={30}
                   value={formData.telefono}
                   onChange={handleChange}
                   placeholder="Ej. 381 555-1234"
@@ -130,17 +168,22 @@ export default function PropietariosForm({ onCancel, onSuccess }) {
               {/* Email */}
               <div>
                 <label htmlFor="email" className={labelClass}>
-                  Correo electrónico
+                  Correo electrónico *
                 </label>
                 <input
                   id="email"
                   name="email"
                   type="email"
+                  required
+                  maxLength={150}
                   value={formData.email}
                   onChange={handleChange}
                   placeholder="ejemplo@correo.com"
                   className={inputClass}
                 />
+                <p className="mt-1.5 text-xs text-slate-400">
+                  El backend requiere una dirección de correo electrónico.
+                </p>
               </div>
             </div>
           </div>
@@ -159,10 +202,11 @@ export default function PropietariosForm({ onCancel, onSuccess }) {
             )}
             <button
               type="submit"
+              disabled={isSubmitting}
               className="flex items-center gap-2 rounded-lg bg-emerald-600 px-5 py-2 text-sm font-semibold text-white shadow-md shadow-emerald-950 transition-all hover:bg-emerald-500 active:scale-[0.98]"
             >
               <Save className="h-4 w-4" />
-              Guardar Propietario
+              {isSubmitting ? 'Guardando...' : 'Guardar Propietario'}
             </button>
           </div>
 

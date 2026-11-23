@@ -1,26 +1,51 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { PawPrint, Save, X } from 'lucide-react'
-
-// Datos de prueba (reemplazar luego con el fetch a tu endpoint /propietarios)
-const PROPIETARIOS_MOCK = [
-  { id: 1, nombre: 'Carlos Gómez', dni: '34.567.890' },
-  { id: 2, nombre: 'María Fernández', dni: '38.123.456' },
-  { id: 3, nombre: 'Lucas Rodríguez', dni: '40.987.654' },
-]
+import { apiRequest } from '../lib/api.js'
 
 export default function MascotasForm({ onCancel, onSuccess }) {
   const [formData, setFormData] = useState({
     nombre: '',
-    especie: '',
+    especie_id: '',
     raza: '',
     sexo: '',
     fecha_nacimiento: '',
     peso_actual: '',
-    castrado: '0',
+    castrado: 'false',
     propietario_id: '',
     observaciones: '',
   })
+  const [propietarios, setPropietarios] = useState([])
+  const [especies, setEspecies] = useState([])
+  const [loadingReferences, setLoadingReferences] = useState(true)
+  const [referenceError, setReferenceError] = useState('')
   const [validationError, setValidationError] = useState('')
+  const [successMessage, setSuccessMessage] = useState('')
+  const [isSubmitting, setIsSubmitting] = useState(false)
+
+  useEffect(() => {
+    const controller = new AbortController()
+
+    Promise.all([
+      apiRequest('/propietarios/?limit=100', { signal: controller.signal }),
+      apiRequest('/especies/?limit=100', { signal: controller.signal }),
+    ])
+      .then(([propietariosResponse, especiesResponse]) => {
+        setPropietarios(propietariosResponse)
+        setEspecies(especiesResponse)
+      })
+      .catch((error) => {
+        if (!controller.signal.aborted) {
+          setReferenceError(error.message)
+        }
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) {
+          setLoadingReferences(false)
+        }
+      })
+
+    return () => controller.abort()
+  }, [])
 
   const handleChange = (e) => {
     const { name, value } = e.target
@@ -29,14 +54,21 @@ export default function MascotasForm({ onCancel, onSuccess }) {
       [name]: value,
     }))
     setValidationError('')
+    setSuccessMessage('')
   }
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
 
     const propietarioId = Number(formData.propietario_id)
     if (!Number.isSafeInteger(propietarioId) || propietarioId <= 0) {
       setValidationError('Seleccione un propietario válido.')
+      return
+    }
+
+    const especieId = Number(formData.especie_id)
+    if (!Number.isSafeInteger(especieId) || especieId <= 0) {
+      setValidationError('Seleccione una especie válida.')
       return
     }
 
@@ -55,17 +87,45 @@ export default function MascotasForm({ onCancel, onSuccess }) {
       }
     }
 
-    // Preparamos el payload limpio para enviar a FastAPI / Pydantic
     const payload = {
-      ...formData,
-      peso_actual: pesoActual,
-      castrado: Number(formData.castrado),
+      nombre: formData.nombre.trim(),
       propietario_id: propietarioId,
+      especie_id: especieId,
+      raza: formData.raza.trim() || null,
+      sexo: formData.sexo || null,
+      fecha_nacimiento: formData.fecha_nacimiento || null,
+      peso_actual: pesoActual,
+      castrado: formData.castrado === 'true',
+      observaciones: formData.observaciones.trim() || null,
+      activo: true,
     }
 
-    console.log('Enviando nueva mascota:', payload)
-    // Aquí iría tu petición POST a /api/mascotas
-    onSuccess?.(payload)
+    setIsSubmitting(true)
+    setValidationError('')
+    setSuccessMessage('')
+    try {
+      const mascota = await apiRequest('/mascotas/', {
+        method: 'POST',
+        body: JSON.stringify(payload),
+      })
+      setSuccessMessage('Mascota registrada correctamente.')
+      setFormData({
+        nombre: '',
+        especie_id: '',
+        raza: '',
+        sexo: '',
+        fecha_nacimiento: '',
+        peso_actual: '',
+        castrado: 'false',
+        propietario_id: '',
+        observaciones: '',
+      })
+      onSuccess?.(mascota)
+    } catch (error) {
+      setValidationError(error.message)
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   // Clases reutilizables para mantener consistencia en inputs y selects
@@ -104,6 +164,22 @@ export default function MascotasForm({ onCancel, onSuccess }) {
               {validationError}
             </p>
           )}
+          {referenceError && (
+            <p
+              role="alert"
+              className="rounded-lg border border-red-500/30 bg-red-500/10 px-3.5 py-2 text-sm text-red-300"
+            >
+              No se pudieron cargar propietarios y especies: {referenceError}
+            </p>
+          )}
+          {successMessage && (
+            <p
+              role="status"
+              className="rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-3.5 py-2 text-sm text-emerald-300"
+            >
+              {successMessage}
+            </p>
+          )}
           
           {/* SECCIÓN 1: DATOS DE LA MASCOTA */}
           <div>
@@ -122,6 +198,7 @@ export default function MascotasForm({ onCancel, onSuccess }) {
                   name="nombre"
                   type="text"
                   required
+                  maxLength={100}
                   value={formData.nombre}
                   onChange={handleChange}
                   placeholder="Ej. Toby"
@@ -136,20 +213,23 @@ export default function MascotasForm({ onCancel, onSuccess }) {
                 </label>
                 <select
                   id="especie"
-                  name="especie"
+                  name="especie_id"
                   required
-                  value={formData.especie}
+                  value={formData.especie_id}
                   onChange={handleChange}
+                  disabled={loadingReferences || especies.length === 0}
                   className={inputClass}
                 >
                   <option value="" disabled>
-                    Seleccionar especie...
+                    {loadingReferences
+                      ? 'Cargando especies...'
+                      : 'Seleccionar especie...'}
                   </option>
-                  <option value="canino">Canino</option>
-                  <option value="felino">Felino</option>
-                  <option value="ave">Ave</option>
-                  <option value="equino">Equino</option>
-                  <option value="reptil">Reptil</option>
+                  {especies.map((especie) => (
+                    <option key={especie.id} value={especie.id}>
+                      {especie.nombre}
+                    </option>
+                  ))}
                 </select>
               </div>
 
@@ -162,6 +242,7 @@ export default function MascotasForm({ onCancel, onSuccess }) {
                   id="raza"
                   name="raza"
                   type="text"
+                  maxLength={100}
                   value={formData.raza}
                   onChange={handleChange}
                   placeholder="Ej. Mestizo, Labrador, Siamés..."
@@ -236,8 +317,8 @@ export default function MascotasForm({ onCancel, onSuccess }) {
                   onChange={handleChange}
                   className={inputClass}
                 >
-                  <option value="1">Sí</option>
-                  <option value="0">No</option>
+                  <option value="true">Sí</option>
+                  <option value="false">No</option>
                 </select>
               </div>
             </div>
@@ -259,17 +340,31 @@ export default function MascotasForm({ onCancel, onSuccess }) {
                 required
                 value={formData.propietario_id}
                 onChange={handleChange}
+                disabled={loadingReferences || propietarios.length === 0}
                 className={inputClass}
               >
                 <option value="" disabled>
-                  Buscar o seleccionar propietario registrado...
+                  {loadingReferences
+                    ? 'Cargando propietarios...'
+                    : 'Seleccionar propietario registrado...'}
                 </option>
-                {PROPIETARIOS_MOCK.map((prop) => (
+                {propietarios.map((prop) => (
                   <option key={prop.id} value={prop.id}>
-                    {prop.nombre} (DNI: {prop.dni})
+                    {[prop.nombre, prop.apellido].filter(Boolean).join(' ')}
+                    {prop.email ? ` (${prop.email})` : ''}
                   </option>
                 ))}
               </select>
+              {!loadingReferences && propietarios.length === 0 && (
+                <p className="mt-1.5 text-xs text-slate-400">
+                  No hay propietarios activos. Registre uno antes de continuar.
+                </p>
+              )}
+              {!loadingReferences && especies.length === 0 && (
+                <p className="mt-1.5 text-xs text-slate-400">
+                  No hay especies registradas disponibles.
+                </p>
+              )}
             </div>
           </div>
 
@@ -309,10 +404,11 @@ export default function MascotasForm({ onCancel, onSuccess }) {
             )}
             <button
               type="submit"
+              disabled={isSubmitting || loadingReferences || Boolean(referenceError)}
               className="flex items-center gap-2 rounded-lg bg-emerald-600 px-5 py-2 text-sm font-semibold text-white shadow-md shadow-emerald-950 transition-all hover:bg-emerald-500 active:scale-[0.98]"
             >
               <Save className="h-4 w-4" />
-              Guardar Mascota
+              {isSubmitting ? 'Guardando...' : 'Guardar Mascota'}
             </button>
           </div>
 
