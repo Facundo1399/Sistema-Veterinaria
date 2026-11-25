@@ -35,8 +35,7 @@ export default function PropietariosForm({ onCancel, onSuccess }) {
       nombre: formData.nombre.trim(),
       apellido: formData.apellido.trim() || null,
       telefono: formData.telefono.trim() || null,
-      email: formData.email.trim(),
-      activo: true,
+      email: formData.email.trim()
     }
 
     setIsSubmitting(true)

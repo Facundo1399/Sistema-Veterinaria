@@ -12,12 +12,13 @@ import Sidebar from './pages/Sidebar.jsx'
 import MascotasForm from './pages/MascotasForm.jsx'
 import PropietariosForm from './pages/PropietariosForm.jsx'
 import Usuarios from './pages/Usuarios.jsx'
+import Citas from './pages/CitasForm.jsx'
+import CitasListado from './pages/CitasListado.jsx'
 import { SIDEBAR_ROUTE_PATHS } from './lib/routes.js'
 import { useAuth } from './context/AuthContext.jsx'
 
 const rutasPendientes = [
   ['/veterinarios', 'Veterinarios'],
-  ['/citas', 'Citas'],
   ['/consultas', 'Consultas'],
   ['/historial', 'Historial Médico'],
   ['/vacunaciones', 'Vacunaciones'],
@@ -30,9 +31,9 @@ function LayoutInterno() {
   const navigate = useNavigate()
   const { pathname } = useLocation()
   const { user, logout } = useAuth()
-  const activeRoute = Object.entries(SIDEBAR_ROUTE_PATHS).find(
-    ([, path]) => path === pathname
-  )?.[0]
+  const activeRoute = Object.entries(SIDEBAR_ROUTE_PATHS)
+    .sort(([, pathA], [, pathB]) => pathB.length - pathA.length)
+    .find(([, path]) => pathname === path || pathname.startsWith(`${path}/`))?.[0]
 
   const handleNavigate = (route) => {
     if (route === 'logout') {
@@ -121,8 +122,20 @@ function App() {
       <Route element={<RequireAuth />}>
         <Route element={<LayoutInterno />}>
           <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/mascotas" element={<MascotasForm />} />
-          <Route path="/propietarios" element={<PropietariosForm />} />
+          <Route element={<ProtectedRoute allowedRoles={['admin', 'recepcion']} />}>
+            <Route path="/mascotas" element={<MascotasForm />} />
+            <Route path="/propietarios" element={<PropietariosForm />} />
+          </Route>
+          <Route
+            element={
+              <ProtectedRoute
+                allowedRoles={['admin', 'veterinario', 'recepcion']}
+              />
+            }
+          >
+            <Route path="/citas" element={<Citas />} />
+            <Route path="/citas/listado" element={<CitasListado />} />
+          </Route>
           <Route element={<ProtectedRoute allowedRoles={['admin']} />}>
             <Route path="/usuarios" element={<Usuarios />} />
             <Route

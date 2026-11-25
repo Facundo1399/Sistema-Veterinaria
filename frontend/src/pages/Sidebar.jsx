@@ -6,6 +6,7 @@ import {
   Users,
   Stethoscope,
   Calendar,
+  CalendarPlus,
   ClipboardList,
   FileText,
   Syringe,
@@ -47,13 +48,13 @@ export default function Sidebar({
       route: 'mascotas',
       label: 'Mascotas',
       icon: PawPrint,
-      roles: ['admin', 'veterinario', 'recepcion'],
+      roles: ['admin', 'recepcion'],
     },
     {
       route: 'propietarios',
       label: 'Propietarios',
       icon: Users,
-      roles: ['admin', 'veterinario', 'recepcion'],
+      roles: ['admin', 'recepcion'],
     },
     {
       route: 'veterinarios',
@@ -66,6 +67,13 @@ export default function Sidebar({
       label: 'Citas',
       icon: Calendar,
       roles: ['admin', 'veterinario', 'recepcion'],
+    },
+    {
+      route: 'citas-nueva',
+      label: 'Agendar cita',
+      icon: CalendarPlus,
+      roles: ['admin', 'veterinario', 'recepcion'],
+      subItem: true,
     },
   ]
 
@@ -126,9 +134,13 @@ export default function Sidebar({
   )
 
   // Estilos de cada enlace
-  const navItemClass = (route) =>
+  const navItemClass = (route, subItem = false) =>
     `flex w-full items-center rounded-lg py-2 text-sm font-medium transition-colors ${
-      collapsed ? 'justify-center px-2' : 'gap-3 px-3'
+      collapsed
+        ? 'justify-center px-2'
+        : subItem
+          ? 'ml-5 w-[calc(100%-1.25rem)] gap-2 px-2 text-xs'
+          : 'gap-3 px-3'
     } ${
       activeRoute === route
         ? 'bg-emerald-600/15 text-emerald-400 border border-emerald-500/20'
@@ -148,7 +160,7 @@ export default function Sidebar({
           title={item.label}
           aria-label={item.label}
           aria-current={activeRoute === item.route ? 'page' : undefined}
-          className={navItemClass(item.route)}
+          className={navItemClass(item.route, item.subItem)}
         >
           <Icon className="h-4 w-4 shrink-0" />
           {!collapsed && item.label}

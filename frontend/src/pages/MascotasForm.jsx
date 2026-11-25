@@ -10,7 +10,7 @@ export default function MascotasForm({ onCancel, onSuccess }) {
     sexo: '',
     fecha_nacimiento: '',
     peso_actual: '',
-    castrado: 'false',
+    castrado: '',
     propietario_id: '',
     observaciones: '',
   })
@@ -60,6 +60,11 @@ export default function MascotasForm({ onCancel, onSuccess }) {
   const handleSubmit = async (e) => {
     e.preventDefault()
 
+    if (!formData.nombre.trim()) {
+      setValidationError('Ingrese el nombre de la mascota.')
+      return
+    }
+
     const propietarioId = Number(formData.propietario_id)
     if (!Number.isSafeInteger(propietarioId) || propietarioId <= 0) {
       setValidationError('Seleccione un propietario válido.')
@@ -96,8 +101,7 @@ export default function MascotasForm({ onCancel, onSuccess }) {
       fecha_nacimiento: formData.fecha_nacimiento || null,
       peso_actual: pesoActual,
       castrado: formData.castrado === 'true',
-      observaciones: formData.observaciones.trim() || null,
-      activo: true,
+      observaciones: formData.observaciones.trim() || null
     }
 
     setIsSubmitting(true)
@@ -339,7 +343,15 @@ export default function MascotasForm({ onCancel, onSuccess }) {
                 name="propietario_id"
                 required
                 value={formData.propietario_id}
-                onChange={handleChange}
+                onChange={(e) => {
+                  e.currentTarget.setCustomValidity('')
+                  handleChange(e)
+                }}
+                onInvalid={(e) =>
+                  e.currentTarget.setCustomValidity(
+                    'Seleccione un propietario para continuar.'
+                  )
+                }
                 disabled={loadingReferences || propietarios.length === 0}
                 className={inputClass}
               >
@@ -404,7 +416,13 @@ export default function MascotasForm({ onCancel, onSuccess }) {
             )}
             <button
               type="submit"
-              disabled={isSubmitting || loadingReferences || Boolean(referenceError)}
+              disabled={
+                isSubmitting ||
+                loadingReferences ||
+                Boolean(referenceError) ||
+                propietarios.length === 0 ||
+                especies.length === 0
+              }
               className="flex items-center gap-2 rounded-lg bg-emerald-600 px-5 py-2 text-sm font-semibold text-white shadow-md shadow-emerald-950 transition-all hover:bg-emerald-500 active:scale-[0.98]"
             >
               <Save className="h-4 w-4" />
