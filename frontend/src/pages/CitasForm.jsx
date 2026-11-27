@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { CalendarPlus, Search, Save, X } from 'lucide-react'
 import { useAuth } from '../context/AuthContext.jsx'
 import { apiRequest } from '../lib/api.js'
@@ -28,6 +29,7 @@ function nombreCompleto(persona) {
 }
 
 export default function CitasForm({ onCancel, onSuccess }) {
+  const [searchParams] = useSearchParams()
   const { user } = useAuth()
   const esAdmin = user?.rol === 'admin'
   const esVeterinario = user?.rol === 'veterinario'
@@ -36,7 +38,10 @@ export default function CitasForm({ onCancel, onSuccess }) {
   const [fechaHoy] = useState(obtenerFechaClinica)
   const [formData, setFormData] = useState({
     mascota_id: '',
-    veterinario_id: '',
+    veterinario_id: (() => {
+      const id = Number(searchParams.get('veterinario_id'))
+      return Number.isSafeInteger(id) && id > 0 ? String(id) : ''
+    })(),
     fecha: fechaHoy,
     hora: '',
     tipo: 'consulta',

@@ -11,15 +11,16 @@ import Dashboard from './pages/Dashboard.jsx'
 import Sidebar from './pages/Sidebar.jsx'
 import MascotasForm from './pages/MascotasForm.jsx'
 import PropietariosForm from './pages/PropietariosForm.jsx'
-import Usuarios from './pages/Usuarios.jsx'
+import Usuarios from './pages/config/Usuarios.jsx'
+import NuevosUsuarios from './pages/config/NuevosUsuarios.jsx'
 import Citas from './pages/CitasForm.jsx'
 import CitasListado from './pages/CitasListado.jsx'
+import Veterinarios from './pages/Veterinarios.jsx'
+import ConsultasForm from './pages/ConsultasForm.jsx'
 import { SIDEBAR_ROUTE_PATHS } from './lib/routes.js'
 import { useAuth } from './context/AuthContext.jsx'
 
 const rutasPendientes = [
-  ['/veterinarios', 'Veterinarios'],
-  ['/consultas', 'Consultas'],
   ['/historial', 'Historial Médico'],
   ['/vacunaciones', 'Vacunaciones'],
   ['/cirugias', 'Cirugías'],
@@ -135,12 +136,19 @@ function App() {
           >
             <Route path="/citas" element={<Citas />} />
             <Route path="/citas/listado" element={<CitasListado />} />
+            <Route path="/veterinarios" element={<Veterinarios />} />
+          </Route>
+          <Route element={<ProtectedRoute allowedRoles={['admin', 'veterinario']} />}>
+            <Route path="/consultas" element={<ConsultasForm />} />
           </Route>
           <Route element={<ProtectedRoute allowedRoles={['admin']} />}>
-            <Route path="/usuarios" element={<Usuarios />} />
+            <Route
+              path="/usuarios"
+              element={<Usuarios />}
+            />
             <Route
               path="/usuarios/nuevo"
-              element={<RutaPendiente titulo="Nuevo Usuario" />}
+              element={<NuevosUsuarios />}
             />
           </Route>
           {rutasPendientes.map(([path, titulo]) => (

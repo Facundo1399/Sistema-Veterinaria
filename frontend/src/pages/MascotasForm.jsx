@@ -86,7 +86,7 @@ export default function MascotasForm({ onCancel, onSuccess }) {
         pesoActual > 999.99
       ) {
         setValidationError(
-          'El peso actual debe ser un número entre 0 y 999,99 kg.'
+          'El último peso conocido debe ser un número entre 0 y 999,99 kg.'
         )
         return
       }
@@ -290,10 +290,10 @@ export default function MascotasForm({ onCancel, onSuccess }) {
                 />
               </div>
 
-              {/* Peso actual */}
+              {/* Último peso conocido */}
               <div>
                 <label htmlFor="peso_actual" className={labelClass}>
-                  Peso actual (kg)
+                  Último peso conocido (kg) · opcional
                 </label>
                 <input
                   id="peso_actual"
@@ -304,7 +304,7 @@ export default function MascotasForm({ onCancel, onSuccess }) {
                   max="999.99"
                   value={formData.peso_actual}
                   onChange={handleChange}
-                  placeholder="Ej. 12.50"
+                  placeholder="Ej. 12.50 (si se conoce)"
                   className={inputClass}
                 />
               </div>
